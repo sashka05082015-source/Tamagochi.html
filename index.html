@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Tamagotchi Deluxe Edition</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        :root { --lcd: #9ba572; --ink: #2d3122; }
+        body { background: #1a1a1a; display: flex; justify-content: center; align-items: center; min-height: 100vh; margin: 0; font-family: 'Press Start 2P', cursive; image-rendering: pixelated; overflow: hidden; }
+
+        /* 5, 9) КОРПУС УЛЬТРА-БОЛЬШОЙ */
+        .case { width: 500px; height: 720px; background: radial-gradient(circle, #ff4757, #c0392b); border-radius: 50% 50% 45% 45%; border: 15px solid #a41b1b; box-shadow: inset -15px -15px 0 rgba(0,0,0,0.3), 20px 20px 60px #000; display: flex; flex-direction: column; align-items: center; position: relative; }
+
+        /* 4, 6) ПИКСЕЛЬНЫЙ ЭКРАН */
+        .screen { width: 340px; height: 320px; background: #222; margin-top: 80px; border-radius: 20px; border: 15px solid #111; padding: 5px; position: relative; }
+        .lcd { width: 100%; height: 100%; background: var(--lcd); display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; border: 4px solid var(--ink); overflow: hidden; }
+        
+        /* 13) ОБОИ ПО УМОЛЧАНИЮ */
+        .bg-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0.15; pointer-events: none; display: flex; align-items: center; justify-content: center; text-align: center; font-size: 10px; line-height: 1.5; color: var(--ink); z-index: 1; }
+
+        #pet { font-size: 80px; filter: grayscale(1) contrast(2); z-index: 5; transition: 0.5s; position: relative; }
+        .bounce { animation: b 1.5s infinite alternate; } @keyframes b { from { transform: translateY(0); } to { transform: translateY(-20px); } }
+
+        .ui-top { position: absolute; top: 8px; width: 90%; font-size: 7px; color: var(--ink); z-index: 10; }
+        .bar { width: 100%; height: 10px; border: 2px solid var(--ink); margin: 3px 0; background: rgba(0,0,0,0.1); }
+        .fill { height: 100%; background: var(--ink); width: 0%; transition: 0.5s; }
+
+        /* 11) КНОПКИ ДЕЙСТВИЙ */
+        .btns { margin-top: 30px; display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; }
+        .btn { width: 95px; height: 95px; border-radius: 50%; background: #eee; border: none; box-shadow: 0 8px #999; font-family: 'Press Start 2P'; font-size: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; text-align: center; padding: 5px; line-height: 1.2; }
+        .btn:active { transform: translateY(4px); box-shadow: 0 2px #999; }
+        .btn:disabled { background: #888; opacity: 0.6; }
+
+        input { width: 80%; font-size: 10px; padding: 8px; margin: 10px 0; background: transparent; border: 3px solid var(--ink); font-family: 'Press Start 2P'; text-align: center; color: var(--ink); z-index: 10; }
+        .hide { display: none !important; }
+        .settings-btn { position: absolute; bottom: 5px; right: 5px; font-size: 8px; cursor: pointer; z-index: 15; opacity: 0.5; }
+    </style>
+</head>
+<body>
+
+<div class="case">
+    <div class="screen">
+        <div class="lcd" id="lcd-screen">
+            <div id="bg-text" class="bg-overlay">&#1057; &#1044;&#1053;&#1045;&#1052; &#1056;&#1054;&#1046;&#1044;&#1045;&#1053;&#1048;&#1071; &#1052;&#1040;&#1052;&#1040; ❤️🎉❤️🎉</div>
+
+            <div id="s1" style="text-align:center; z-index:10;">
+                <div style="font-size:7px">&#1042;&#1067;&#1041;&#1045;&#1056;&#1048; &#1044;&#1056;&#1059;&#1043;&#1040;</div>
+                <div id="sel" style="font-size:70px; margin:15px; cursor:pointer" onclick="nextP()">❓</div>
+                <button onclick="go(2)" style="background:var(--ink); color:var(--lcd); border:none; padding:12px; font-size:10px">OK</button>
+            </div>
+
+            <div id="s2" class="hide" style="text-align:center; z-index:10;">
+                <input type="text" id="i-n" placeholder="NAME">
+                <input type="text" id="i-h" placeholder="HOBBY">
+                <button onclick="start()" style="background:var(--ink); color:var(--lcd); border:none; padding:12px; font-size:10px">START</button>
+            </div>
+
+            <div id="s3" class="hide" style="height:100%; width:100%; display:flex; flex-direction:column; align-items:center; justify-content:center">
+                <div class="ui-top">
+                    <div style="display:flex; justify-content:space-between">
+                        <span id="d-n">?</span> <span id="d-st">&#1071;&#1049;&#1062;&#1054;</span>
+                    </div>
+                    <div class="bar"><div id="h-f" class="fill"></div></div>
+                    <div class="bar"><div id="e-f" class="fill"></div></div>
+                </div>
+                <div id="pet" class="bounce">🥚</div>
+                <div id="tmr" style="font-size:7px; margin-top:30px; color:var(--ink)"></div>
+                <div class="settings-btn" onclick="changeBg()">[BG]</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="btns">
+        <button class="btn" id="bt1" onclick="act('FEED',300)">&#1045;&#1044;&#1040;<br>5m</button>
+        <button class="btn" id="bt2" onclick="act('PLAY',600)">&#1048;&#1043;&#1056;&#1040;<br>10m</button>
+        <button class="btn" id="bt3" onclick="act('SLEEP',7200)">&#1057;&#1054;&#1053;<br>2h</button>
+        <button class="btn" id="bt4" onclick="act('STUDY',900)">&#1059;&#1063;&#1045;&#1041;&#1040;<br>15m</button>
+        <button class="btn" id="bt5" onclick="act('HOBBY',600)">HOBBY<br>10m</button>
+        <button class="btn" onclick="res()" style="background:#333; color:white">RESET</button>
+    </div>
+</div>
+
+<script>
+    /* 12) SFX КОРЕЙСКИЙ ДВИЖОК ЗВУКА */
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    function playSfx(f, d, type="square") {
+        const osc = audioCtx.createOscillator();
+        const g = audioCtx.createGain();
+        osc.type = type; osc.frequency.setValueAtTime(f, audioCtx.currentTime);
+        g.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + d);
+        osc.connect(g); g.connect(audioCtx.destination);
+        osc.start(); osc.stop(audioCtx.currentTime + d);
+    }
+    const sfx = {
+        click: () => playSfx(600, 0.1),
+        win: () => { playSfx(523, 0.1); setTimeout(()=>playSfx(659, 0.1), 100); setTimeout(()=>playSfx(783, 0.2), 200); },
+        grow: () => { [440, 554, 659, 880].forEach((f, i) => setTimeout(()=>playSfx(f, 0.2), i*150)); }
+    };
+
+    /* 8) ВСЕ ЖИВОТНЫЕ */
+    const all = ["🐞","🪲","🐝","🐜","🦋","🐌","🪼","🦀","🐡","🐠","🐟","🦭","🐬","🐋","🐳","🦖","🦕","🐉","🐲","🐍","🦎","🐢","🐊","🐸","🐦‍🔥","🪿","🐦‍⬛","🦜","🦚","🦩","🦤","🦉","🦢","🦆","🦅","🕊","🐧","🐦","🐥","🐓","🦃","🦡","🦘","🦨","🦦","🦥","🐼","🐻‍❄️","🐨","🐻","🦇","🦔","🦫","🐿","🐇","🐰","🐹","🐀","🐁","🐭","🦛","🦏","🦣","🐘","🦒","🦙","🐫","🐪","🐐","🐑","🐏","🐗","🐖","🐄","🐃","🐂","🐮","🦬","🦌","🦓","🦄","🐎","🫏","🫎","🐴","🐆","🐅","🐯","🦁","🐈‍⬛","🐈","🐱","🦝","🦊","🐺","🐩","🐕‍🦺","🐕","🐶","🦧","🦍","🐒","🐵"];
+    
+    let d = JSON.parse(localStorage.getItem('tama_v13_mom')) || { init: false, idx: 0, n: '', h: '', hug: 20, en: 100, exp: 0, bU: 0, lC: Date.now(), bg: 0 };
+
+    const bgs = [
+        "&#1057; &#1044;&#1053;&#1045;&#1052; &#1056;&#1054;&#1046;&#1044;&#1045;&#1053;&#1048;&#1071; &#1052;&#1040;&#1052;&#1040; ❤️🎉❤️🎉",
+        "✨✨✨✨<br>✨✨✨✨",
+        "🍃🌸🍃🌸<br>🌸🍃🌸🍃",
+        "PIXEL CITY 90s"
+    ];
+
+    function changeBg() { sfx.click(); d.bg = (d.bg + 1) % bgs.length; document.getElementById('bg-text').innerHTML = bgs[d.bg]; save(); }
+    function nextP() { sfx.click(); d.idx = (d.idx + 1) % all.length; document.getElementById('sel').innerText = all[d.idx]; }
+    function go(n) { sfx.click(); document.getElementById('s1').classList.add('hide'); document.getElementById('s2').classList.remove('hide'); }
+    function start() { sfx.win(); d.n = document.getElementById('i-n').value || "PET"; d.h = document.getElementById('i-h').value || "HOBBY"; d.init = true; save(); refresh(); }
+
+    function refresh() {
+        if (!d.init) return;
+        document.getElementById('s1').classList.add('hide'); document.getElementById('s2').classList.add('hide');
+        document.getElementById('s3').classList.remove('hide'); document.getElementById('s3').style.display = 'flex';
+        document.getElementById('d-n').innerText = d.n.toUpperCase();
+        document.getElementById('bt5').innerHTML = d.h.toUpperCase() + "<br>10m";
+        document.getElementById('bg-text').innerHTML = bgs[d.bg];
+
+        /* 3) СТАДИИ (ОЧЕНЬ ДОЛГИЕ) */
+        let icon = "🥚", st = "&#1071;&#1049;&#1062;&#1054;";
+        if (d.exp >= 1000) { if(d.exp < 1200) sfx.grow(); icon = all[d.idx]; st = "&#1052;&#1040;&#1051;&#1067;&#1064;"; }
+        if (d.exp >= 10000) { st = "&#1055;&#1054;&#1044;&#1056;&#1054;&#1057;&#1058;&#1054;&#1050;"; }
+        if (d.exp >= 30000) { st = "&#1042;&#1047;&#1056;&#1054;&#1057;&#1051;&#1067;&#1049;"; }
+        if (d.exp >= 100000) { st = "&#1057;&#1058;&#1040;&#1056;&#1045;&#1062;"; }
+
+        document.getElementById('pet').innerText = icon;
+        document.getElementById('d-st').innerHTML = st;
+        document.getElementById('h-f').style.width = (100 - d.hug) + "%";
+        document.getElementById('e-f').style.width = d.en + "%";
+
+        let now = Date.now();
+        if (now < d.bU) {
+            let left = Math.ceil((d.bU - now) / 1000);
+            document.getElementById('tmr').innerText = Math.floor(left/60) + "m " + (left%60) + "s";
+            lock(true);
+        } else { document.getElementById('tmr').innerText = ""; lock(false); }
+    }
+
+    function lock(v) { for(let i=1; i<=5; i++) document.getElementById('bt'+i).disabled = v; }
+    function act(t, s) {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        sfx.click();
+        d.bU = Date.now() + (s * 1000);
+        if (t === 'FEED') { d.hug = Math.max(0, d.hug - 20); d.exp += 150; }
+        if (t === 'PLAY') { d.en -= 20; d.exp += 300; }
+        if (t === 'SLEEP') { d.en = 100; d.exp += 500; }
+        if (t === 'STUDY') { d.exp += 1000; d.en -= 30; }
+        if (t === 'HOBBY') { d.exp += 800; d.hug += 10; }
+        save(); refresh();
+    }
+
+    setInterval(() => {
+        if (!d.init) return;
+        let diff = (Date.now() - d.lC) / 1000;
+        d.hug = Math.min(100, d.hug + (diff / 1000)); 
+        d.en = Math.max(0, d.en - (diff / 1200));
+        d.lC = Date.now(); save(); refresh();
+    }, 10000);
+
+    function res() { sfx.click(); if(confirm("RESET?")) { localStorage.removeItem('tama_v13_mom'); location.reload(); } }
+    function save() { localStorage.setItem('tama_v13_mom', JSON.stringify(d)); }
+    refresh();
+</script>
+</body>
+</html>
